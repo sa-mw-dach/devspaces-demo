@@ -18,7 +18,7 @@ This project uses a custom created Universal Developer Image, which is provided 
 The whole topology consists of 3 namespaces, the devspaces namespace containing the OpenShift Dev Spaces (CheCluster) instance, the devspaces-image namespace containing the quarkus developer image pipeline and the devspaces-demo namespace containing this project.
 
 * Create Namespaces
-  ```sh 
+  ```sh
   oc new-project devspaces
   oc new-project devspaces-image
   oc new-project devspaces-demo
@@ -38,7 +38,7 @@ The whole topology consists of 3 namespaces, the devspaces namespace containing 
 The pipeline of this project pushes its image to quay.io. Dev Spaces needs git credentials to commit to the repository.
 * Quay.io username and cli token
 * GitHub user id and secret
-* Have a look at the `development/2-github-and-quay-secrets.yaml` file, insert your credentials and apply this file 
+* Have a look at the `deployment/2-github-and-quay-secrets.yaml` file, insert your credentials and apply this file
   * [further information regarding the github oAuth](https://access.redhat.com/documentation/en-us/red_hat_openshift_dev_spaces/3.0/html-single/administration_guide/index#configuring-oauth-2-for-github)
 * Link quay secret to pipeline ServiceAccount
   ```sh
@@ -53,7 +53,7 @@ Depending on your usage you will need to share (in kubernetes that means re-crea
   | jq 'del(.metadata["namespace","creationTimestamp","resourceVersion","selfLink","uid"])' \
   | oc apply -n devspaces-demo -f -
   ```
-  
+
 ## Dev Spaces Demo
 
 This dev spaces demo shows a full circle for a workspace environment with connected pipelines and gitops. To deploy (and after you have completed the prerequisites), configure the `argoapp.yaml` file and apply it in your namespace via:
@@ -70,7 +70,7 @@ The pipeline and deployment is accomplished via helm. Have a look at the `deploy
 To use this project on your own you'll have to do these steps:
 1. Fork this project
 2. Create the devspaces-demo repository in quay.io
-3. Set your git and quay repo urls in the `development/helm/values.yaml` file
+3. Set your git and quay repo urls in the `deployment/helm/values.yaml` file
 4. Set your git repo url in the `deployment/argoapp.yaml` file
 5. Commit everything
 6. Set your github and quay.io credentials in the `deployment/2-github-and-quay-secrets.yaml` file and apply it to your cluster in your devspaces-demo namespace
