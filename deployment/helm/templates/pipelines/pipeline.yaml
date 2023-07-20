@@ -3,7 +3,6 @@ kind: Pipeline
 metadata:
   name: {{ include "app.fullname" . }}-build
 spec:
-  resources: []
   workspaces:
     - name: shared-workspace
     - name: local-maven-repo
