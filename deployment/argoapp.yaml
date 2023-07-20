@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   source:
     path: deployment/helm
-    repoURL: https://github.com/gmodzelewski/devspaces-demo
+    repoURL: https://github.com/sa-mw-dach/devspaces-demo
     targetRevision: HEAD
   project: default
   syncPolicy:
