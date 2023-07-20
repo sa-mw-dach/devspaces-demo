@@ -4,7 +4,7 @@
 
 All deployment objects, prerequsites included, are stored in the `deployment` folder.
 
-All objects required for building a custom image are stored in the `developer-image` folder.
+All objects required for building a custom image are stored [in the devspaces-developer-image github project](https://github.com/sa-mw-dach/devspaces-developer-image).
 
 ### Needed Operators:
 * OpenShift Dev Spaces
@@ -12,13 +12,11 @@ All objects required for building a custom image are stored in the `developer-im
 * OpenShift GitOps
 
 ### Needed Workspaces:
-
-This project uses a custom created Universal Developer Image, which is provided in the `developer-image` folder.
-
+This project uses a custom created Universal Developer Image, which is provided in [this GitHub Repository](https://github.com/sa-mw-dach/devspaces-developer-image).
 The whole topology consists of 3 namespaces, the devspaces namespace containing the OpenShift Dev Spaces (CheCluster) instance, the devspaces-image namespace containing the quarkus developer image pipeline and the devspaces-demo namespace containing this project.
 
 * Create Namespaces
-  ```sh
+  ```sh 
   oc new-project devspaces
   oc new-project devspaces-image
   oc new-project devspaces-demo
@@ -38,7 +36,7 @@ The whole topology consists of 3 namespaces, the devspaces namespace containing 
 The pipeline of this project pushes its image to quay.io. Dev Spaces needs git credentials to commit to the repository.
 * Quay.io username and cli token
 * GitHub user id and secret
-* Have a look at the `deployment/2-github-and-quay-secrets.yaml` file, insert your credentials and apply this file
+* Have a look at the `2-github-and-quay-secrets.yaml` file, insert your credentials and apply this file 
   * [further information regarding the github oAuth](https://access.redhat.com/documentation/en-us/red_hat_openshift_dev_spaces/3.0/html-single/administration_guide/index#configuring-oauth-2-for-github)
 * Link quay secret to pipeline ServiceAccount
   ```sh
@@ -53,7 +51,7 @@ Depending on your usage you will need to share (in kubernetes that means re-crea
   | jq 'del(.metadata["namespace","creationTimestamp","resourceVersion","selfLink","uid"])' \
   | oc apply -n devspaces-demo -f -
   ```
-
+  
 ## Dev Spaces Demo
 
 This dev spaces demo shows a full circle for a workspace environment with connected pipelines and gitops. To deploy (and after you have completed the prerequisites), configure the `argoapp.yaml` file and apply it in your namespace via:
@@ -78,7 +76,7 @@ To use this project on your own you'll have to do these steps:
 8. In the browser, navigate in your forked github devspaces-demo project to the settings page and open your webhooks
 9. Copy your pipeline event listener url via `oc get route devspaces-demo-el-route -n devspaces-demo -o go-template='{{.spec.host}}'`
 10. Create a webhook, paste the pipeline and set the content type to json
-11. Open your Dev Spaces project, for example via link: [https://devspaces.apps.ocp.ocp-gm.de/#https://github.com/gmodzelewski/devspaces-demo]
+11. Open your Dev Spaces project, for example via link: [https://devspaces.apps.ocp.ocp-gm.de/#https://github.com/sa-mw-dach/devspaces-demo]
 12. Start coding cool stuff
 
-If you want to create your own custom images, have a look at the developer-image folder. Complete the steps documented in the `developer-image/README.md` there and set the name of your quay.io developer image repo in the `devfile.yaml`.
+If you want to create your own custom images, you'll also have to fork the [devspaces-developer-image Project](https://github.com/sa-mw-dach/devspaces-developer-image), complete the steps documented in the README.md there and set the name of your quay.io developer image repo in the `devfile.yaml`
