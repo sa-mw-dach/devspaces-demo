@@ -60,7 +60,7 @@ commands:
       label: "Start Development mode (Hot reload + debug)"
       component: quarkus-developer-image
       workingDir: ${PROJECT_SOURCE}
-      commandLine: "mvn compile quarkus:dev"
+      commandLine: "quarkus dev"
       group:
         kind: run
         isDefault: true
