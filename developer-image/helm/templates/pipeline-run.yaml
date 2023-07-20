@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: {{ include "app.fullname" . }}-run-{{ .Release.Revision }}
+  labels:
+    tekton.dev/pipeline: {{ include "app.fullname" . }}-build
+    app.kubernetes.io/name: {{ include "app.fullname" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+spec:
+  pipelineRef:
+    name: {{ include "app.fullname" . }}-build
+  serviceAccountName: pipeline
+  timeout: 1h0m0s
+  params:
+    - name: git-url
+      value: {{ coalesce .Values.gitUrl "https://github.com/gmodzelewski/devspaces-demo" }}
+    - name: IMAGE
+      value: {{ coalesce .Values.repoUrl "quay.io/modzelewski/quarkus-developer-image" }}
+    - name: TAG
+      value: {{ coalesce .Values.repoTAG "1.0.0" }}
+  workspaces:
+    - name: source
+      persistentVolumeClaim:
+        claimName: {{ include "app.fullname" . }}-build-pvc

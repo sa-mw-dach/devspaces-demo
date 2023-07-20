@@ -1,0 +1,109 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "app.fullname" . }}-build
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+spec:
+  resources:
+    requests:
+      memory: "500Mi"
+      cpu: "250m"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+  tasks:
+    ##------------------------------------------------------------------
+    # Git clone task
+    ##------------------------------------------------------------------
+    - name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: main
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: deleteExisting
+          value: 'true'
+        - name: verbose
+          value: 'true'
+        - name: gitInitImage
+          value: >-
+            registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:cadf614a6044ee37397de3abe7674827ecab225e7fac9fb123eff5473e2c4003
+        - name: userHome
+          value: /tekton/home
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: source
+    ##------------------------------------------------------------------
+    # Deploy via Dockerfile
+    ##------------------------------------------------------------------
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE):$(params.TAG)
+        - name: BUILDER_IMAGE
+          value: >-
+            quay.io/buildah/stable:latest
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: DOCKERFILE
+          value: Containerfile
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: FORMAT
+          value: oci
+        - name: BUILD_EXTRA_ARGS
+          value: ''
+        - name: PUSH_EXTRA_ARGS
+          value: ''
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: source
+  ##------------------------------------------------------------------
+  # notify on slack
+  ##------------------------------------------------------------------
+  # finally:
+  #   - name: notify-slack-test
+  #     params:
+  #       - name: webhook-secret
+  #         value: {{ include "app.fullname" . }}-slack-webhook
+  #       - name: message
+  #         value: "Build of {{ include "app.fullname" . }} completed."
+  #     taskRef:
+  #       name: send-to-webhook-slack
+  ##------------------------------------------------------------------
+  # Workspace definitions
+  ##------------------------------------------------------------------
+  workspaces:
+    - name: source
+      optional: false
+  ##------------------------------------------------------------------
+  # Parameters definitions
+  ##------------------------------------------------------------------
+  params:
+    - description: url of the git repo for the code of deployment
+      name: git-url
+      type: string
+    - description: image to be built from the code
+      name: IMAGE
+      type: string
+    - description: image tag to be set
+      name: TAG
+      type: string
+      default: latest

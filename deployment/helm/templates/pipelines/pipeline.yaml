@@ -1,0 +1,87 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "app.fullname" . }}-build
+spec:
+  resources: []
+  workspaces:
+    - name: shared-workspace
+    - name: local-maven-repo
+  params:
+    - description: url of the git repo for the code of deployment
+      name: git-url
+      type: string
+    - description: revision to be used from repo of the code for deployment
+      name: git-revision
+      type: string
+      default: main
+    - description: image to be built from the code
+      name: IMAGE
+      type: string
+    - description: image tag to be set
+      name: TAG
+      type: string
+      default: latest
+    - description: dockerfile location
+      name: DOCKERFILE
+      type: string
+      default: src/main/docker/Dockerfile.native
+  tasks:
+    - name: fetch-repository
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: subdirectory
+          value: ''
+        - name: deleteExisting
+          value: 'true'
+        - name: revision
+          value: $(params.git-revision)
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+    - name: build-native-executable
+      runAfter:
+        - fetch-repository
+      taskSpec:
+        workspaces:
+          - name: source
+            description: the source code
+          - name: maven-repo
+            description: the local maven repository
+        steps:
+          - name: build-executable
+            resources:
+              requests:
+                memory: 8Gi
+            image: quay.io/quarkus/ubi-quarkus-native-image:22.2.0-java17
+            workingDir: /workspace/source
+            command:
+              - ./mvnw
+              - package
+              - '-Pnative'
+              - '-Dmaven.repo.local=$(workspaces.maven-repo.path)'
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: maven-repo
+          workspace: local-maven-repo
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE):$(params.TAG)
+        - name: DOCKERFILE
+          value: $(params.DOCKERFILE)
+        - name: TLSVERIFY
+          value: 'false'
+      runAfter:
+        - build-native-executable
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      workspaces:
+        - name: source
+          workspace: shared-workspace

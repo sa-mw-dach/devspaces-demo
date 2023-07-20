@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: quarkus-developer-image
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+spec:
+  destination:
+    namespace: devspaces-image
+    server: https://kubernetes.default.svc
+  source:
+    path: helm
+    repoURL: https://github.com/gmodzelewski/quarkus-developer-image
+    targetRevision: HEAD
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

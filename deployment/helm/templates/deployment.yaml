@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.defaultLabels" . | indent 4 }}
+  annotations:
+    app.openshift.io/vcs-uri: {{ coalesce .Values.gitUrl "https://github.com/gmodzelewski/devspaces-demo" }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "app.selectorLabels" . | indent 6 }}
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        {{- include "app.defaultLabels" . | indent 8 }}  
+    spec:
+      containers:
+        - name: container
+          image: {{ coalesce .Values.repoUrl "quay.io/modzelewski/devspaces-demo" }}:{{ coalesce .Values.repoTAG "latest" }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%

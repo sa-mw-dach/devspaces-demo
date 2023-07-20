@@ -1,0 +1,43 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: {{ include "app.fullname" . }}
+spec:
+  params:
+    - description: The git repository url
+      name: git-repo-url
+    - default: main
+      description: The git revision
+      name: git-revision
+    - description: The name of the deployment to be created / patched
+      name: git-repo-name
+    - description: the git pusher name
+      name: git-pusher-name
+    - description: the git commit message
+      name: git-commit-message
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: {{ include "app.fullname" . }}-$(tt.params.git-repo-name)-
+      spec:
+        params:
+          - name: deployment-name
+            value: $(tt.params.git-repo-name)
+          - name: git-url
+            value: $(tt.params.git-repo-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: git-pusher-name
+            value: $(tt.params.git-pusher-name)
+          - name: git-commit-message
+            value: $(tt.params.git-commit-message)
+          - name: appversion
+            value: $(tt.params.git-revision)
+        pipelineRef:
+          name: {{ include "app.fullname" . }}-build
+        serviceAccountName: pipeline
+        workspaces:
+          - name: source
+            persistentVolumeClaim:
+              claimName: {{ include "app.fullname" . }}-build-pvc
